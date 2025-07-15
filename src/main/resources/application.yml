@@ -1,0 +1,40 @@
+server:
+  port: 8090 # 服务端口
+  servlet:
+    context-path: /dh-netsdk # url前缀
+spring:
+  application:
+    name: dh-netsdk
+  # http接口出参，序列化jna对象时，空对象不抛出异常
+  # jackson:
+  #   serialization:
+  #     fail-on-empty-beans: false
+
+# swagger文档相关配置（如需定制可取消注释）
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+# http接口自定义配置
+# 接口请求时间戳校验超时时间（毫秒），默认5分钟。用于服务端校验接口请求时间戳，防止重放攻击
+device:
+  timestamp:
+    expire-ms: 300000
+
+# 接口请求密文AES加密密钥，16位字符，前后端需保持一致。用于设备密码加密传输
+crypto:
+  aes-key: NetSDK1234567890
+
+# native异常关键字配置，逗号分隔
+native:
+  error-keywords: Invalid memory access
+
+# 守护进程相关配置
+# cmd: 完整的worker启动命令（如 java -jar dh-netsdk-http.jar worker）
+# native-crash-exit-code: worker进程遇到native崩溃等致命异常时，使用此退出码（如99）退出，守护进程检测到后自动重启
+guard:
+  cmd: java -jar dh-netsdk-http.jar worker
+  native-crash-exit-code: 99
