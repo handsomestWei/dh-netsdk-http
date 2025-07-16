@@ -9,7 +9,7 @@
 netsdk版本：`General_NetSDK_ChnEng_JAVA_Win64_IS_V3.060.0000000.0.R.250417`
 
 ## 接口文档
-从启动类`NetSdkApplication`启动服务后，访问`http://localhost:8090/dh-netsdk/swagger-ui.html`查看接口文档和在线调试。
+从启动类[NetSdkApplication](src/main/java/com/netsdk/demo/http/NetSdkApplication.java)启动服务后，访问`http://localhost:8090/dh-netsdk/swagger-ui.html`查看接口文档和在线调试。
 
 ## http接口列表
 <details>
@@ -60,14 +60,15 @@ netsdk版本：`General_NetSDK_ChnEng_JAVA_Win64_IS_V3.060.0000000.0.R.250417`
 ## http服务设计说明
 包路径：`com.netsdk.demo.http`
 
-### 双模式（守护进程/worker进程）机制简介
+- **双模式（守护进程/worker进程）机制简介**
 
-为提升服务高可用性，系统支持“守护进程+业务进程”双模式启动：
+  为提升服务高可用性，系统支持“守护进程+业务进程”双模式启动：
 
-- **守护进程模式**（推荐）：通过 `java -jar xxx.jar guard` 启动，主进程自动拉起并监控业务进程（worker），worker异常退出时自动重启。
-- **业务进程模式**：通过 `java -jar xxx.jar` 启动，仅运行业务逻辑，无自恢复能力。
+  - **守护进程模式**（推荐）：通过 `java -jar xxx.jar guard` 启动，主进程自动拉起并监控业务进程（worker），worker异常退出时自动重启。
 
-守护进程模式适用于JNA/JNI DLL崩溃等场景，可防止服务假死、线程挂起，实现自动自愈。Docker部署时建议ENTRYPOINT为 `java -jar xxx.jar guard`，确保容器内服务可持续运行。
+  - **业务进程模式**：通过 `java -jar xxx.jar` 启动，仅运行业务逻辑，无自恢复能力。   
+
+  守护进程模式适用于JNA/JNI DLL崩溃等场景，可防止服务假死、线程挂起，实现自动自愈。Docker部署时建议ENTRYPOINT为 `java -jar xxx.jar guard`，确保容器内服务可持续运行。
 
 - **控制器基类**：
   - 统一处理设备登录、接口安全。
@@ -139,5 +140,6 @@ netsdk版本：`General_NetSDK_ChnEng_JAVA_Win64_IS_V3.060.0000000.0.R.250417`
 本项目依赖的第三方库及其License详见`doc/`目录下的License文件：
 - [Open Source Software Licenses-NetSDK_Java.txt](doc/Open%20Source%20Software%20Licenses-NetSDK_Java.txt)
 - [Open Source Software Licenses-PlaySDK.txt](doc/Open%20Source%20Software%20Licenses-PlaySDK.txt)
-- [Open Source Software Licenses-StreamConvertor.txt](doc/Open%20Source%20Software%20Licenses-StreamConvertor.txt)
+- [Open Source Software Licenses-StreamConvertor.txt](doc/Open%20Source%20Software%20Licenses-StreamConvertor.txt)   
+
 本项目仅调用/链接上述第三方库，未对其源码进行修改。所有第三方库的版权声明和License均已完整保留。  
