@@ -37,6 +37,7 @@ public class DeviceAccessHttpUtil {
 
     /**
      * 设备请求时间戳有效期（毫秒），默认5分钟。可通过配置覆盖。
+     * 注意：内部会转换为微秒进行比较，以支持微秒级时间戳精度。
      */
     private static long TIMESTAMP_EXPIRE_MS;
     @Value("${device.timestamp.expire-ms:300000}")
@@ -65,7 +66,7 @@ public class DeviceAccessHttpUtil {
      * @param ip 设备IP
      * @param user 用户名
      * @param password 明文密码
-     * @param timestamp 时间戳（建议用System.currentTimeMillis()）
+     * @param timestamp 时间戳（建议用System.nanoTime()获取微秒级时间戳）
      * @param port 端口号
      * @return 设备请求头Map
      * @throws Exception 加密异常
@@ -146,12 +147,12 @@ public class DeviceAccessHttpUtil {
         if (!ts.equals(tsInPwd)) {
             throw new IllegalArgumentException("时间戳校验失败: ts=" + ts + ", tsInPwd=" + tsInPwd);
         }
-        long now = System.currentTimeMillis();
+        long now = System.nanoTime();
         long tsLong;
         try { tsLong = Long.parseLong(ts); } catch (Exception e) {
             throw new IllegalArgumentException("时间戳格式错误: ts=" + ts);
         }
-        if (Math.abs(now - tsLong) > TIMESTAMP_EXPIRE_MS) {
+        if (Math.abs(now - tsLong) > TIMESTAMP_EXPIRE_MS * 1000) { // 转换为微秒进行比较
             throw new IllegalArgumentException("登录请求已过期: now=" + now + ", tsLong=" + tsLong + ", expireMs=" + TIMESTAMP_EXPIRE_MS);
         }
         int port = 37777;
@@ -246,11 +247,11 @@ public class DeviceAccessHttpUtil {
      */
     public static void main(String[] args) throws Exception {
         String password = "admin";
-        String timestamp = String.valueOf(System.currentTimeMillis());
+        String timestamp = String.valueOf(System.nanoTime());
         String encrypted = encryptWithTimestamp(password, timestamp);
         System.out.println("加密后: " + encrypted);
         String[] decrypted = decryptWithTimestamp(encrypted);
         System.out.println("解密后 password: " + decrypted[0]);
         System.out.println("解密后 timestamp: " + decrypted[1]);
     }
-} 
+}
