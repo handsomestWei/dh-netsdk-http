@@ -672,7 +672,7 @@ public class GateExtModule {
         }
         try {
             int totalCount = outStart.nTotalCount;
-            final int BATCH_SIZE = 100;
+            final int BATCH_SIZE = 10;
             int fetched = 0;
             int remain = (maxCount > 0 && maxCount < totalCount) ? maxCount : totalCount;
             while (fetched < totalCount && remain > 0) {
