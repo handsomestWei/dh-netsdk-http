@@ -2,15 +2,11 @@ package com.netsdk.demo.module.ext;
 
 import com.netsdk.lib.NetSDKLib;
 import com.netsdk.lib.ToolKits;
-import com.sun.jna.Memory;
 import com.netsdk.demo.module.LoginModule;
 import com.netsdk.lib.NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARD;
 import com.netsdk.lib.NetSDKLib.NET_CTRL_RECORDSET_INSERT_PARAM;
-import com.netsdk.lib.NetSDKLib.NET_IN_FIND_NEXT_RECORD_PARAM;
-import com.netsdk.lib.NetSDKLib.NET_OUT_FIND_NEXT_RECORD_PARAM;
 import com.netsdk.lib.NetSDKLib.EM_NET_RECORD_TYPE;
 import com.netsdk.lib.NetSDKLib.CtrlType;
-import com.netsdk.lib.NetSDKLib.LLong;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
@@ -21,24 +17,26 @@ public class GateExtModule {
 
     /**
      * 添加卡（支持多门通道）
-     * @param cardNo   卡号
-     * @param userId   用户ID
-     * @param cardName 卡名
-     * @param cardPwd  卡密码
-     * @param cardStatus 卡状态
-     * @param cardType   卡类型
-     * @param useTimes   使用次数
-     * @param isFirstEnter 是否首卡, 1-true, 0-false
-     * @param isValid      是否有效, 1-true, 0-false
-     * @param startValidTime  有效开始时间
-     * @param endValidTime    有效结束时间
-     * @param doorIds   门通道ID数组（可多个）
-     * @param loginHandle 登录句柄
-     * @return true:成功   false:失败
+     *
+     * @param cardNo         卡号
+     * @param userId         用户ID
+     * @param cardName       卡名
+     * @param cardPwd        卡密码
+     * @param cardStatus     卡状态
+     * @param cardType       卡类型
+     * @param useTimes       使用次数
+     * @param isFirstEnter   是否首卡, 1-true, 0-false
+     * @param isValid        是否有效, 1-true, 0-false
+     * @param startValidTime 有效开始时间
+     * @param endValidTime   有效结束时间
+     * @param doorIds        门通道ID数组（可多个）
+     * @param loginHandle    登录句柄
+     * @return true:成功 false:失败
      */
-    public static boolean insertCard(NetSDKLib.LLong loginHandle, String cardNo, String userId, String cardName, String cardPwd,
-                                     int cardStatus, int cardType, int useTimes, int isFirstEnter,
-                                     int isValid, String startValidTime, String endValidTime, int[] doorIds) {
+    public static boolean insertCard(NetSDKLib.LLong loginHandle, String cardNo, String userId, String cardName,
+            String cardPwd,
+            int cardStatus, int cardType, int useTimes, int isFirstEnter,
+            int isValid, String startValidTime, String endValidTime, int[] doorIds) {
         NET_RECORDSET_ACCESS_CTL_CARD accessCardInfo = new NET_RECORDSET_ACCESS_CTL_CARD();
         // 卡号
         System.arraycopy(cardNo.getBytes(), 0, accessCardInfo.szCardNo, 0, cardNo.getBytes().length);
@@ -46,7 +44,8 @@ public class GateExtModule {
         System.arraycopy(userId.getBytes(), 0, accessCardInfo.szUserID, 0, userId.getBytes().length);
         // 卡名
         try {
-            System.arraycopy(cardName.getBytes("GBK"), 0, accessCardInfo.szCardName, 0, cardName.getBytes("GBK").length);
+            System.arraycopy(cardName.getBytes("GBK"), 0, accessCardInfo.szCardName, 0,
+                    cardName.getBytes("GBK").length);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -111,16 +110,19 @@ public class GateExtModule {
 
     /**
      * 新增卡片，无需再传门禁通道和有效期，在人员侧已经绑定，只需关联人员id即可。需要先添加人员，且人员要先关联门通道和人员有效期
-     * @param cardNo   卡号
-     * @param userId   用户ID
-     * @param cardType 卡类型
+     *
+     * @param cardNo      卡号
+     * @param userId      用户ID
+     * @param cardType    卡类型
      * @param loginHandle 登录句柄
-     * @return true:成功   false:失败
+     * @return true:成功 false:失败
      */
     public static boolean insertCardByService(NetSDKLib.LLong loginHandle, String cardNo, String userId, int cardType) {
         NetSDKLib.NET_ACCESS_CARD_INFO cardInfo = new NetSDKLib.NET_ACCESS_CARD_INFO();
-        System.arraycopy(cardNo.getBytes(), 0, cardInfo.szCardNo, 0, Math.min(cardNo.getBytes().length, cardInfo.szCardNo.length));
-        System.arraycopy(userId.getBytes(), 0, cardInfo.szUserID, 0, Math.min(userId.getBytes().length, cardInfo.szUserID.length));
+        System.arraycopy(cardNo.getBytes(), 0, cardInfo.szCardNo, 0,
+                Math.min(cardNo.getBytes().length, cardInfo.szCardNo.length));
+        System.arraycopy(userId.getBytes(), 0, cardInfo.szUserID, 0,
+                Math.min(userId.getBytes().length, cardInfo.szUserID.length));
         cardInfo.emType = cardType;
 
         // 构造入参
@@ -143,12 +145,11 @@ public class GateExtModule {
         outParam.write();
 
         boolean ret = LoginModule.netsdk.CLIENT_OperateAccessCardService(
-            loginHandle,
-            NetSDKLib.NET_EM_ACCESS_CTL_CARD_SERVICE.NET_EM_ACCESS_CTL_CARD_SERVICE_INSERT,
-            inParam.getPointer(),
-            outParam.getPointer(),
-            5000
-        );
+                loginHandle,
+                NetSDKLib.NET_EM_ACCESS_CTL_CARD_SERVICE.NET_EM_ACCESS_CTL_CARD_SERVICE_INSERT,
+                inParam.getPointer(),
+                outParam.getPointer(),
+                5000);
         outParam.read();
         if (!ret) {
             System.err.println("添加卡片失败." + ToolKits.getErrorCodePrint());
@@ -161,13 +162,15 @@ public class GateExtModule {
 
     /**
      * 查询卡信息，支持按卡号和用户ID查询，返回卡片列表，线程安全
-     * @param cardNo 卡号，为空查询所有。注意某些设备卡号长度默认6位，需要前补0对齐，否则查不到
-     * @param userId 用户ID，为空不作为条件
-     * @param maxCount 最大查询条数
+     *
+     * @param cardNo      卡号，为空查询所有。注意某些设备卡号长度默认6位，需要前补0对齐，否则查不到
+     * @param userId      用户ID，为空不作为条件
+     * @param maxCount    最大查询条数
      * @param loginHandle 登录句柄
      * @return List<NET_RECORDSET_ACCESS_CTL_CARD> 查询到的卡片信息
      */
-    public static java.util.List<NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARD> findCardList(NetSDKLib.LLong loginHandle, String cardNo, String userId, int maxCount) {
+    public static java.util.List<NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARD> findCardList(NetSDKLib.LLong loginHandle,
+            String cardNo, String userId, int maxCount) {
         java.util.List<NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARD> resultList = new java.util.ArrayList<>();
         NetSDKLib.FIND_RECORD_ACCESSCTLCARD_CONDITION findCondition = new NetSDKLib.FIND_RECORD_ACCESSCTLCARD_CONDITION();
         boolean precise = false;
@@ -214,7 +217,8 @@ public class GateExtModule {
                 stNextOut.pRecordList.clear(pstRecord[0].dwSize * batch);
                 ToolKits.SetStructArrToPointerData(pstRecord, stNextOut.pRecordList);
                 if (LoginModule.netsdk.CLIENT_FindNextRecord(stNextIn, stNextOut, 5000)) {
-                    if (stNextOut.nRetRecordNum == 0) break;
+                    if (stNextOut.nRetRecordNum == 0)
+                        break;
                     // 只分配实际返回条数的数组，防止越界
                     NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARD[] realRecords = new NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARD[stNextOut.nRetRecordNum];
                     for (int i = 0; i < stNextOut.nRetRecordNum; i++) {
@@ -225,7 +229,8 @@ public class GateExtModule {
                         resultList.add(realRecords[i]);
                     }
                     remain -= stNextOut.nRetRecordNum;
-                    if (stNextOut.nRetRecordNum < batch) break;
+                    if (stNextOut.nRetRecordNum < batch)
+                        break;
                 } else {
                     break;
                 }
@@ -241,6 +246,7 @@ public class GateExtModule {
     /**
      * 获取门禁通道数量。
      * 注意：某些高端设备或特殊配置下，一个门禁组下可能会有多个门，此时组数和门数就不是一一对应。作为门禁数量来用的，这在绝大多数大华门禁设备上是成立的，即"组数=门数"。
+     *
      * @param loginHandle 登录句柄
      * @return 门禁通道数量，失败返回0
      */
@@ -259,8 +265,7 @@ public class GateExtModule {
                 szBuf,
                 nBufferLen,
                 nError,
-                3000
-        );
+                3000);
         if (!bRet) {
             return 0;
         }
@@ -271,8 +276,7 @@ public class GateExtModule {
                 szBuf,
                 stuCap.getPointer(),
                 stuCap.size(),
-                null
-        );
+                null);
         if (!bParse) {
             return 0;
         }
@@ -288,7 +292,8 @@ public class GateExtModule {
         NetSDKLib.CFG_ACCESS_EVENT_INFO info = new NetSDKLib.CFG_ACCESS_EVENT_INFO();
         boolean ret = com.netsdk.lib.ToolKits.GetDevConfig(loginHandle, channel, NetSDKLib.CFG_CMD_ACCESS_EVENT, info);
         if (!ret) {
-            System.err.printf("[GateExtModule] 获取通道%d信息失败, 错误: %s\n", channel, com.netsdk.lib.ToolKits.getErrorCodeShow());
+            System.err.printf("[GateExtModule] 获取通道%d信息失败, 错误: %s\n", channel,
+                    com.netsdk.lib.ToolKits.getErrorCodeShow());
             return null;
         }
         return info;
@@ -297,7 +302,8 @@ public class GateExtModule {
     /**
      * 获取所有门禁通道信息列表，直接返回SDK结构体列表
      */
-    public static java.util.List<NetSDKLib.CFG_ACCESS_EVENT_INFO> getAllAccessChannelInfo(NetSDKLib.LLong loginHandle, int channelCount) {
+    public static java.util.List<NetSDKLib.CFG_ACCESS_EVENT_INFO> getAllAccessChannelInfo(NetSDKLib.LLong loginHandle,
+            int channelCount) {
         java.util.List<NetSDKLib.CFG_ACCESS_EVENT_INFO> list = new java.util.ArrayList<>();
         for (int i = 0; i < channelCount; i++) {
             NetSDKLib.CFG_ACCESS_EVENT_INFO info = getAccessChannelInfo(loginHandle, i);
@@ -310,15 +316,17 @@ public class GateExtModule {
 
     /**
      * 查询开门记录，带分页参数，返回结果列表
+     *
      * @param loginHandle 登录句柄
-     * @param start 开始时间
-     * @param end 结束时间
-     * @param cardNo 卡号
-     * @param pageNum 页码
-     * @param pageSize 每页条数
+     * @param start       开始时间
+     * @param end         结束时间
+     * @param cardNo      卡号
+     * @param pageNum     页码
+     * @param pageSize    每页条数
      * @return 记录列表
      */
-    public static java.util.List<NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARDREC> getOpenDoorRecords(NetSDKLib.LLong loginHandle, String start, String end, String cardNo, int pageNum, int pageSize) {
+    public static java.util.List<NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARDREC> getOpenDoorRecords(
+            NetSDKLib.LLong loginHandle, String start, String end, String cardNo, int pageNum, int pageSize) {
         java.util.List<NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARDREC> outList = new java.util.ArrayList<>();
         if (loginHandle == null || loginHandle.longValue() == 0) {
             return outList;
@@ -345,10 +353,12 @@ public class GateExtModule {
         }
         NetSDKLib.LLong findHandle = outParam.lFindeHandle;
         try {
-            java.util.List<NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARDREC> records = getOpenDoorRecords(loginHandle, findHandle, pageNum, pageSize);
+            java.util.List<NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARDREC> records = getOpenDoorRecords(loginHandle,
+                    findHandle, pageNum, pageSize);
             outList.addAll(records);
-            // 统一转换为UTC+8
-            convertRecordsToUTC8(outList);
+            // 以设备侧配置的时区为准，不进行转换
+            // // 统一转换为UTC+8
+            // convertRecordsToUTC8(outList);
         } finally {
             LoginModule.netsdk.CLIENT_FindRecordClose(findHandle);
         }
@@ -357,13 +367,15 @@ public class GateExtModule {
 
     /**
      * 分页查询开门记录，返回结果列表
+     *
      * @param loginHandle 登录句柄
-     * @param findHandle 查询句柄
-     * @param pageNum 页码（从1开始）
-     * @param pageSize 每页条数
+     * @param findHandle  查询句柄
+     * @param pageNum     页码（从1开始）
+     * @param pageSize    每页条数
      * @return 记录列表
      */
-    private static java.util.List<NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARDREC> getOpenDoorRecords(NetSDKLib.LLong loginHandle, NetSDKLib.LLong findHandle, int pageNum, int pageSize) {
+    private static java.util.List<NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARDREC> getOpenDoorRecords(
+            NetSDKLib.LLong loginHandle, NetSDKLib.LLong findHandle, int pageNum, int pageSize) {
         int batchSize = pageSize;
         int startIndex = (pageNum - 1) * pageSize;
         java.util.List<NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARDREC> resultList = new java.util.ArrayList<>();
@@ -371,7 +383,8 @@ public class GateExtModule {
         int skipped = 0;
         while (skipped < startIndex) {
             int skipCount = Math.min(batchSize, startIndex - skipped);
-            if (skipCount <= 0) break;
+            if (skipCount <= 0)
+                break;
             NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARDREC[] skipRecords = new NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARDREC[skipCount];
             for (int i = 0; i < skipCount; i++) {
                 skipRecords[i] = new NetSDKLib.NET_RECORDSET_ACCESS_CTL_CARDREC();
@@ -387,7 +400,8 @@ public class GateExtModule {
             if (!LoginModule.netsdk.CLIENT_FindNextRecord(skipIn, skipOut, 5000)) {
                 return resultList;
             }
-            if (skipOut.nRetRecordNum == 0) return resultList;
+            if (skipOut.nRetRecordNum == 0)
+                return resultList;
             skipped += skipOut.nRetRecordNum;
         }
         // 取当前页数据
@@ -407,7 +421,8 @@ public class GateExtModule {
             return resultList;
         }
         nextOut.read();
-        if (nextOut.nRetRecordNum == 0) return resultList;
+        if (nextOut.nRetRecordNum == 0)
+            return resultList;
         ToolKits.GetPointerDataToStructArr(memory, records);
         for (int i = 0; i < nextOut.nRetRecordNum; i++) {
             resultList.add(records[i]);
@@ -446,10 +461,11 @@ public class GateExtModule {
 
     /**
      * 获取开门记录总记录数（先查句柄再查总数，SDK接口不支持直接条件统计）
+     *
      * @param loginHandle 登录句柄
-     * @param start 开始时间
-     * @param end 结束时间
-     * @param cardNo 卡号
+     * @param start       开始时间
+     * @param end         结束时间
+     * @param cardNo      卡号
      * @return 总记录数
      */
     public static int getOpenDoorRecordCount(NetSDKLib.LLong loginHandle, String start, String end, String cardNo) {
@@ -493,14 +509,16 @@ public class GateExtModule {
     public static boolean openDoor(NetSDKLib.LLong loginHandle, int channelNo) {
         // 获取当前门状态
         NetSDKLib.CFG_ACCESS_EVENT_INFO info = new NetSDKLib.CFG_ACCESS_EVENT_INFO();
-        boolean getRet = com.netsdk.lib.ToolKits.GetDevConfig(loginHandle, channelNo, NetSDKLib.CFG_CMD_ACCESS_EVENT, info);
+        boolean getRet = com.netsdk.lib.ToolKits.GetDevConfig(loginHandle, channelNo, NetSDKLib.CFG_CMD_ACCESS_EVENT,
+                info);
         if (!getRet) {
             return false;
         }
         // 如果不是正常状态，先设置为正常
         if (info.emState != NetSDKLib.CFG_ACCESS_STATE.ACCESS_STATE_NORMAL) {
             info.emState = NetSDKLib.CFG_ACCESS_STATE.ACCESS_STATE_NORMAL;
-            boolean setRet = com.netsdk.lib.ToolKits.SetDevConfig(loginHandle, channelNo, NetSDKLib.CFG_CMD_ACCESS_EVENT, info);
+            boolean setRet = com.netsdk.lib.ToolKits.SetDevConfig(loginHandle, channelNo,
+                    NetSDKLib.CFG_CMD_ACCESS_EVENT, info);
             if (!setRet) {
                 return false;
             }
@@ -513,8 +531,7 @@ public class GateExtModule {
                 loginHandle,
                 NetSDKLib.CtrlType.CTRLTYPE_CTRL_ACCESS_OPEN,
                 openParam.getPointer(),
-                3000
-        );
+                3000);
         return ret;
     }
 
@@ -523,13 +540,15 @@ public class GateExtModule {
      */
     public static boolean closeDoor(NetSDKLib.LLong loginHandle, int channelNo) {
         NetSDKLib.CFG_ACCESS_EVENT_INFO info = new NetSDKLib.CFG_ACCESS_EVENT_INFO();
-        boolean getRet = com.netsdk.lib.ToolKits.GetDevConfig(loginHandle, channelNo, NetSDKLib.CFG_CMD_ACCESS_EVENT, info);
+        boolean getRet = com.netsdk.lib.ToolKits.GetDevConfig(loginHandle, channelNo, NetSDKLib.CFG_CMD_ACCESS_EVENT,
+                info);
         if (!getRet) {
             return false;
         }
         if (info.emState != NetSDKLib.CFG_ACCESS_STATE.ACCESS_STATE_NORMAL) {
             info.emState = NetSDKLib.CFG_ACCESS_STATE.ACCESS_STATE_NORMAL;
-            boolean setRet = com.netsdk.lib.ToolKits.SetDevConfig(loginHandle, channelNo, NetSDKLib.CFG_CMD_ACCESS_EVENT, info);
+            boolean setRet = com.netsdk.lib.ToolKits.SetDevConfig(loginHandle, channelNo,
+                    NetSDKLib.CFG_CMD_ACCESS_EVENT, info);
             if (!setRet) {
                 return false;
             }
@@ -541,8 +560,7 @@ public class GateExtModule {
                 loginHandle,
                 NetSDKLib.CtrlType.CTRLTYPE_CTRL_ACCESS_CLOSE,
                 closeParam.getPointer(),
-                3000
-        );
+                3000);
         return ret;
     }
 
@@ -551,12 +569,14 @@ public class GateExtModule {
      */
     public static boolean alwaysOpenDoor(NetSDKLib.LLong loginHandle, int channelNo) {
         NetSDKLib.CFG_ACCESS_EVENT_INFO info = new NetSDKLib.CFG_ACCESS_EVENT_INFO();
-        boolean getRet = com.netsdk.lib.ToolKits.GetDevConfig(loginHandle, channelNo, NetSDKLib.CFG_CMD_ACCESS_EVENT, info);
+        boolean getRet = com.netsdk.lib.ToolKits.GetDevConfig(loginHandle, channelNo, NetSDKLib.CFG_CMD_ACCESS_EVENT,
+                info);
         if (!getRet) {
             return false;
         }
         info.emState = NetSDKLib.CFG_ACCESS_STATE.ACCESS_STATE_OPENALWAYS;
-        boolean setRet = com.netsdk.lib.ToolKits.SetDevConfig(loginHandle, channelNo, NetSDKLib.CFG_CMD_ACCESS_EVENT, info);
+        boolean setRet = com.netsdk.lib.ToolKits.SetDevConfig(loginHandle, channelNo, NetSDKLib.CFG_CMD_ACCESS_EVENT,
+                info);
         return setRet;
     }
 
@@ -565,19 +585,22 @@ public class GateExtModule {
      */
     public static boolean alwaysCloseDoor(NetSDKLib.LLong loginHandle, int channelNo) {
         NetSDKLib.CFG_ACCESS_EVENT_INFO info = new NetSDKLib.CFG_ACCESS_EVENT_INFO();
-        boolean getRet = com.netsdk.lib.ToolKits.GetDevConfig(loginHandle, channelNo, NetSDKLib.CFG_CMD_ACCESS_EVENT, info);
+        boolean getRet = com.netsdk.lib.ToolKits.GetDevConfig(loginHandle, channelNo, NetSDKLib.CFG_CMD_ACCESS_EVENT,
+                info);
         if (!getRet) {
             return false;
         }
         info.emState = NetSDKLib.CFG_ACCESS_STATE.ACCESS_STATE_CLOSEALWAYS;
-        boolean setRet = com.netsdk.lib.ToolKits.SetDevConfig(loginHandle, channelNo, NetSDKLib.CFG_CMD_ACCESS_EVENT, info);
+        boolean setRet = com.netsdk.lib.ToolKits.SetDevConfig(loginHandle, channelNo, NetSDKLib.CFG_CMD_ACCESS_EVENT,
+                info);
         return setRet;
     }
 
     /**
      * 新增或修改用户
+     *
      * @param loginHandle 登录句柄
-     * @param userInfo 用户信息结构体
+     * @param userInfo    用户信息结构体
      * @return true:成功 false:失败
      */
     public static boolean addOrUpdateUser(NetSDKLib.LLong loginHandle, NetSDKLib.NET_ACCESS_USER_INFO userInfo) {
@@ -599,17 +622,20 @@ public class GateExtModule {
             failCodes[i].write();
         }
         outParam.write();
-        boolean ret = LoginModule.netsdk.CLIENT_OperateAccessUserService(loginHandle, NetSDKLib.NET_EM_ACCESS_CTL_USER_SERVICE.NET_EM_ACCESS_CTL_USER_SERVICE_INSERT, inParam.getPointer(), outParam.getPointer(), 5000);
+        boolean ret = LoginModule.netsdk.CLIENT_OperateAccessUserService(loginHandle,
+                NetSDKLib.NET_EM_ACCESS_CTL_USER_SERVICE.NET_EM_ACCESS_CTL_USER_SERVICE_INSERT, inParam.getPointer(),
+                outParam.getPointer(), 5000);
         return ret;
     }
 
     /**
      * 删除用户
+     *
      * @param loginHandle 登录句柄
-     * @param szUserID 用户ID
+     * @param szUserID    用户ID
      * @return true:成功 false:失败
      */
-    public static boolean deleteUser(NetSDKLib.LLong loginHandle,  byte[] szUserID) {
+    public static boolean deleteUser(NetSDKLib.LLong loginHandle, byte[] szUserID) {
         NetSDKLib.NET_IN_ACCESS_USER_SERVICE_REMOVE inParam = new NetSDKLib.NET_IN_ACCESS_USER_SERVICE_REMOVE();
         NetSDKLib.NET_OUT_ACCESS_USER_SERVICE_REMOVE outParam = new NetSDKLib.NET_OUT_ACCESS_USER_SERVICE_REMOVE();
         inParam.nUserNum = 1;
@@ -623,12 +649,15 @@ public class GateExtModule {
             failCodes[i].write();
         }
         outParam.write();
-        boolean ret = LoginModule.netsdk.CLIENT_OperateAccessUserService(loginHandle, NetSDKLib.NET_EM_ACCESS_CTL_USER_SERVICE.NET_EM_ACCESS_CTL_USER_SERVICE_REMOVE, inParam.getPointer(), outParam.getPointer(), 5000);
+        boolean ret = LoginModule.netsdk.CLIENT_OperateAccessUserService(loginHandle,
+                NetSDKLib.NET_EM_ACCESS_CTL_USER_SERVICE.NET_EM_ACCESS_CTL_USER_SERVICE_REMOVE, inParam.getPointer(),
+                outParam.getPointer(), 5000);
         return ret;
     }
 
     /**
      * 清空所有用户
+     *
      * @param loginHandle 登录句柄
      * @return true:成功 false:失败
      */
@@ -640,23 +669,24 @@ public class GateExtModule {
         inParam.write();
         outParam.write();
         boolean ret = LoginModule.netsdk.CLIENT_OperateAccessUserService(
-            loginHandle,
-            NetSDKLib.NET_EM_ACCESS_CTL_USER_SERVICE.NET_EM_ACCESS_CTL_USER_SERVICE_CLEAR,
-            inParam.getPointer(),
-            outParam.getPointer(),
-            5000
-        );
+                loginHandle,
+                NetSDKLib.NET_EM_ACCESS_CTL_USER_SERVICE.NET_EM_ACCESS_CTL_USER_SERVICE_CLEAR,
+                inParam.getPointer(),
+                outParam.getPointer(),
+                5000);
         return ret;
     }
 
     /**
      * 查询用户信息列表
+     *
      * @param loginHandle 登录句柄
-     * @param userId 用户ID，可为空
-     * @param maxCount 最大条数
+     * @param userId      用户ID，可为空
+     * @param maxCount    最大条数
      * @return 用户信息列表
      */
-    public static java.util.List<NetSDKLib.NET_ACCESS_USER_INFO> getUserRecords(NetSDKLib.LLong loginHandle, String userId, int maxCount) {
+    public static java.util.List<NetSDKLib.NET_ACCESS_USER_INFO> getUserRecords(NetSDKLib.LLong loginHandle,
+            String userId, int maxCount) {
         java.util.List<NetSDKLib.NET_ACCESS_USER_INFO> userList = new java.util.ArrayList<>();
         if (loginHandle == null || loginHandle.longValue() == 0) {
             throw new IllegalStateException("请先登录设备");
@@ -666,7 +696,8 @@ public class GateExtModule {
             com.netsdk.lib.ToolKits.StringToByteArray(userId, inStart.szUserID);
         }
         NetSDKLib.NET_OUT_USERINFO_START_FIND outStart = new NetSDKLib.NET_OUT_USERINFO_START_FIND();
-        NetSDKLib.LLong findHandle = com.netsdk.demo.module.LoginModule.netsdk.CLIENT_StartFindUserInfo(loginHandle, inStart, outStart, 5000);
+        NetSDKLib.LLong findHandle = com.netsdk.demo.module.LoginModule.netsdk.CLIENT_StartFindUserInfo(loginHandle,
+                inStart, outStart, 5000);
         if (findHandle == null || findHandle.longValue() == 0) {
             throw new RuntimeException("开始查询失败");
         }
@@ -684,15 +715,18 @@ public class GateExtModule {
                 outDo.nMaxNum = thisBatch;
                 int userInfoSize = new NetSDKLib.NET_ACCESS_USER_INFO().size();
                 // 注意有坑：
-                // JNA 的 .size() 只根据 Java 结构体推算，但如果结构体有指针字段（如 Pointer），JNA 只分配指针本身的大小，不会递归分配指针指向的内容。
-                // C 端如果期望 NET_ACCESS_USER_INFO 是“全内存展开”，而你只分配了指针本身，native 端访问指针内容时会发生“Invalid memory access”
+                // JNA 的 .size() 只根据 Java 结构体推算，但如果结构体有指针字段（如 Pointer），JNA
+                // 只分配指针本身的大小，不会递归分配指针指向的内容。
+                // C 端如果期望 NET_ACCESS_USER_INFO 是“全内存展开”，而你只分配了指针本身，native 端访问指针内容时会发生“Invalid
+                // memory access”
                 // 所有指针字段必须置为 NULL，不能让 native 端去解引用
                 com.sun.jna.Memory mem = new com.sun.jna.Memory(userInfoSize * thisBatch);
                 mem.clear(); // 清零，确保所有指针字段为0
                 outDo.pstuInfo = mem;
                 inDo.write();
                 outDo.write();
-                boolean ret = com.netsdk.demo.module.LoginModule.netsdk.CLIENT_DoFindUserInfo(findHandle, inDo, outDo, 5000);
+                boolean ret = com.netsdk.demo.module.LoginModule.netsdk.CLIENT_DoFindUserInfo(findHandle, inDo, outDo,
+                        5000);
                 outDo.read();
                 if (ret && outDo.nRetNum > 0) {
                     NetSDKLib.NET_ACCESS_USER_INFO[] users = new NetSDKLib.NET_ACCESS_USER_INFO[thisBatch];
@@ -703,7 +737,8 @@ public class GateExtModule {
                     for (int i = 0; i < outDo.nRetNum; i++) {
                         userList.add(users[i]);
                     }
-                    if (outDo.nRetNum < thisBatch) break;
+                    if (outDo.nRetNum < thisBatch)
+                        break;
                     fetched += outDo.nRetNum;
                     remain -= outDo.nRetNum;
                 } else {
@@ -718,8 +753,9 @@ public class GateExtModule {
 
     /**
      * 查询用户总数
+     *
      * @param loginHandle 登录句柄
-     * @param userId 用户ID，可为空
+     * @param userId      用户ID，可为空
      * @return 总数
      */
     public static int getUserRecordsCount(NetSDKLib.LLong loginHandle, String userId) {
@@ -731,7 +767,8 @@ public class GateExtModule {
             com.netsdk.lib.ToolKits.StringToByteArray(userId, inStart.szUserID);
         }
         NetSDKLib.NET_OUT_USERINFO_START_FIND outStart = new NetSDKLib.NET_OUT_USERINFO_START_FIND();
-        NetSDKLib.LLong findHandle = com.netsdk.demo.module.LoginModule.netsdk.CLIENT_StartFindUserInfo(loginHandle, inStart, outStart, 5000);
+        NetSDKLib.LLong findHandle = com.netsdk.demo.module.LoginModule.netsdk.CLIENT_StartFindUserInfo(loginHandle,
+                inStart, outStart, 5000);
         if (findHandle == null || findHandle.longValue() == 0) {
             return 0;
         }
