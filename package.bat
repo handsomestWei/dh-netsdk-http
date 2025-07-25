@@ -7,13 +7,13 @@ call mvn install:install-file -Dfile=./libs/jna.jar -DgroupId=com.dahua -Dartifa
 REM 打包Spring Boot HTTP服务版
 
 echo Packaging HTTP服务版 ...
-call mvn clean package -Phttp
+call mvn clean package -Phttp -DskipTests
 if exist target\dh-netsdk-http.jar echo HTTP fat jar: target\dh-netsdk-http.jar
 
 REM 打包GUI桌面版
 
 echo Packaging GUI桌面版 ...
-call mvn clean package -Pgui
+call mvn clean package -Pgui -DskipTests
 if exist target\dh-netsdk-gui.jar echo GUI fat jar: target\dh-netsdk-gui.jar
 
 echo All done.

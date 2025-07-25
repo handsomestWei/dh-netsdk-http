@@ -4,7 +4,7 @@
 ## 简介
 对厂商原有的设备sdk dll二次封装，暴露http接口，提供给外部系统调用。
 + 屏蔽底层开发语言的差异，上层系统对接大华设备不再需要参照对应的开发语言demo去实现。
-+ http服务独立进程部署，而非集成的方式整合到原有业务，避免厂商dll自身原因引发如内存泄漏等问题带崩主业务。   
++ http服务独立进程部署，而非集成的方式整合到原有业务，避免厂商dll自身原因引发如内存泄漏等问题带崩主业务。
 
 netsdk版本：`General_NetSDK_ChnEng_JAVA_Win64_IS_V3.060.0000000.0.R.250417`
 
@@ -44,7 +44,7 @@ netsdk版本：`General_NetSDK_ChnEng_JAVA_Win64_IS_V3.060.0000000.0.R.250417`
   |--------|------|------|
   | Dh-Device-Ip | 设备IP | 是 |
   | Dh-Device-Password | 设备登录加密密码串（AES加密，带时间戳，详见下方） | 是 |
-  | Dh-Device-Timestamp | 当前请求时间戳（与加密串一致） | 是 |
+  | Dh-Device-Timestamp | 当前请求时间戳（与加密串一致），微秒 | 是 |
   | Dh-Device-User | 设备登录用户名，默认admin | 否 |
   | Dh-Device-Port | 设备端口，默认37777 | 否 |
 
@@ -66,7 +66,7 @@ netsdk版本：`General_NetSDK_ChnEng_JAVA_Win64_IS_V3.060.0000000.0.R.250417`
 
   - **守护进程模式**（推荐）：通过 `java -jar xxx.jar guard` 启动，主进程自动拉起并监控业务进程（worker），worker异常退出时自动重启。
 
-  - **业务进程模式**：通过 `java -jar xxx.jar` 启动，仅运行业务逻辑，无自恢复能力。   
+  - **业务进程模式**：通过 `java -jar xxx.jar` 启动，仅运行业务逻辑，无自恢复能力。
 
   守护进程模式适用于JNA/JNI DLL崩溃等场景，可防止服务假死、线程挂起，实现自动自愈。Docker部署时建议ENTRYPOINT为 `java -jar xxx.jar guard`，确保容器内服务可持续运行。
 
@@ -84,13 +84,13 @@ netsdk版本：`General_NetSDK_ChnEng_JAVA_Win64_IS_V3.060.0000000.0.R.250417`
 参考工程目录下的`package.bat`脚本。
 - **打包桌面版（GUI）**：
   ```sh
-  mvn clean package -Pgui
+  mvn clean package -Pgui -DskipTests
   ```
   生成主类为`com.netsdk.demo.frame.Main`的`dh-netsdk-gui.jar`。
-  
+
 - **打包 Spring Boot 服务版（HTTP）**：
   ```sh
-  mvn clean package -Phttp
+  mvn clean package -Phttp -DskipTests
   ```
   生成主类为`com.netsdk.demo.http.NetSdkApplication`的`dh-netsdk-http.jar`。
 
@@ -99,7 +99,7 @@ netsdk版本：`General_NetSDK_ChnEng_JAVA_Win64_IS_V3.060.0000000.0.R.250417`
 
 ## 其他扩展
 ### 窗体功能扩展
-包路径：`com.netsdk.demo.frame.Gate.ext`   
+包路径：`com.netsdk.demo.frame.Gate.ext`
 + 扩展：门禁通道信息
 + 扩展：门禁用户管理
 + 扩展：门禁卡管理
@@ -110,8 +110,8 @@ netsdk版本：`General_NetSDK_ChnEng_JAVA_Win64_IS_V3.060.0000000.0.R.250417`
 
 ## 附：sdk调用常见问题
 ### 接口调用异常：无效内存访问Invalid memory access
-- 原因：JNA的.size()只根据Java结构体推算，但如果结构体有指针字段（如 Pointer），JNA只分配指针本身的大小，不会递归分配指针指向的内容。C端如果期望对象是“全内存展开”，而你只分配了指针本身，native端访问指针内容时会发生“Invalid memory access”   
-- 解决方案：所有指针字段必须置为 NULL，不能让 native 端去解引用   
+- 原因：JNA的.size()只根据Java结构体推算，但如果结构体有指针字段（如 Pointer），JNA只分配指针本身的大小，不会递归分配指针指向的内容。C端如果期望对象是“全内存展开”，而你只分配了指针本身，native端访问指针内容时会发生“Invalid memory access”
+- 解决方案：所有指针字段必须置为 NULL，不能让 native 端去解引用
 - 示例代码：
   ```java
   com.sun.jna.Memory mem = new com.sun.jna.Memory(userInfoSize * thisBatch);
@@ -133,13 +133,13 @@ netsdk版本：`General_NetSDK_ChnEng_JAVA_Win64_IS_V3.060.0000000.0.R.250417`
   }
   // write写入内存之前，需要定义完整的出参outParam，不能偷懒
   outParam.write();
-  boolean ret = LoginModule.netsdk.CLIENT_OperateAccessUserService(loginHandle, NetSDKLib.NET_EM_ACCESS_CTL_USER_SERVICE.NET_EM_ACCESS_CTL_USER_SERVICE_INSERT, inParam.getPointer(), outParam.getPointer(), 5000); 
+  boolean ret = LoginModule.netsdk.CLIENT_OperateAccessUserService(loginHandle, NetSDKLib.NET_EM_ACCESS_CTL_USER_SERVICE.NET_EM_ACCESS_CTL_USER_SERVICE_INSERT, inParam.getPointer(), outParam.getPointer(), 5000);
   ```
-  
+
 ## 第三方依赖与License
 本项目依赖的第三方库及其License详见`doc/`目录下的License文件：
 - [Open Source Software Licenses-NetSDK_Java.txt](doc/Open%20Source%20Software%20Licenses-NetSDK_Java.txt)
 - [Open Source Software Licenses-PlaySDK.txt](doc/Open%20Source%20Software%20Licenses-PlaySDK.txt)
-- [Open Source Software Licenses-StreamConvertor.txt](doc/Open%20Source%20Software%20Licenses-StreamConvertor.txt)   
+- [Open Source Software Licenses-StreamConvertor.txt](doc/Open%20Source%20Software%20Licenses-StreamConvertor.txt)
 
-本项目仅调用/链接上述第三方库，未对其源码进行修改。所有第三方库的版权声明和License均已完整保留。  
+本项目仅调用/链接上述第三方库，未对其源码进行修改。所有第三方库的版权声明和License均已完整保留。
